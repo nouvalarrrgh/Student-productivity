@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Register - Student Productivity</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 to-indigo-200">
+  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow">
+    <h1 class="text-2xl font-bold mb-4">Daftar</h1>
+    <div id="msg" class="text-sm text-red-500 mb-2 hidden"></div>
+    <input id="reg-username" placeholder="Username" class="w-full p-3 border rounded mb-2"/>
+    <input id="reg-email" placeholder="Email" class="w-full p-3 border rounded mb-2"/>
+    <input id="reg-password" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4"/>
+    <div class="flex gap-2">
+      <button id="btn-register" class="flex-1 bg-indigo-600 text-white p-3 rounded">Register</button>
+      <a href="login.html" class="flex-1 text-center p-3 rounded border">Login</a>
+    </div>
+  </div>
+
+  <script>
+    const API = 'http://localhost:4001/api';
+    document.getElementById('btn-register').addEventListener('click', async ()=>{
+      const username = document.getElementById('reg-username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value.trim();
+      if(!username || !password) return alert('Lengkapi username & password');
+      try{
+        const res = await fetch(API + '/auth/register', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ username, email, password })
+        });
+        const data = await res.json();
+        if(!res.ok){ alert(data.message || 'Register gagal'); return; }
+        alert('Berhasil daftar. Silakan login.');
+        location.href = '/login.html';
+      }catch(err){
+        console.error(err); alert('Error connecting to API');
+      }
+    });
+  </script>
+</body>
+</html>

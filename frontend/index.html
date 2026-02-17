@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Student Productivity</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+<style>
+body, button, input, h1, h2, h3, p, span {
+  font-family: 'Inter', sans-serif !important;
+}
+
+.card {
+  background-color: #ffffff;
+  box-shadow: 0 8px 24px rgba(0,0,0,.08);
+  transition: 0.25s ease;
+}
+.card:hover {
+  transform: scale(1.02);
+}
+
+.page {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.page.show-page {
+  opacity: 1;
+}
+.hidden { display:none; }
+
+/* Sidebar */
+#sidebar {
+  transition: transform .3s ease;
+}
+
+/* Styling tambahan untuk filter habit */
+.habit-filter-time.active-filter {
+    background-color: #4f46e5; /* indigo-600 */
+    color: white;
+    font-weight: 600;
+}
+</style>
+</head>
+
+<body class="bg-gradient-to-br from-blue-100 to-indigo-200 flex flex-col min-h-screen">
+
+<header class="fixed top-0 left-0 right-0 bg-white shadow z-50">
+  <div class="flex items-center justify-between px-4 py-3">
+
+    <div class="flex items-center gap-3">
+      <button id="btn-menu" class="text-2xl text-indigo-700">☰</button>
+      <h1 class="text-xl font-bold text-indigo-700">Student Productivity</h1>
+    </div>
+
+    <div class="relative flex items-center gap-2">
+    <div class="relative">
+      <button id="btn-notif" class="p-2 rounded-full bg-white shadow-md hover:shadow-xl transition relative">
+        🔔 <span id="notif-count" class="absolute -top-1 -right-1 bg-red-600 text-white text-xs px-2 rounded-full hidden">0</span>
+      </button>
+      <div id="notif-panel" class="absolute right-0 mt-2 w-72 bg-white shadow-xl rounded-xl p-3 hidden">
+        <h3 class="font-bold mb-2 text-indigo-700">Notifikasi</h3>
+        <div id="notif-items" class="space-y-2 max-h-64 overflow-y-auto"></div>
+      </div>
+    </div>
+
+      <button id="btn-show-profile"
+        class="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center">
+        👤
+      </button>
+    </div>
+
+  </div>
+</header>
+
+<aside id="sidebar"
+  class="fixed top-0 left-0 h-full w-64 bg-white shadow z-40 pt-20 transform -translate-x-full">
+
+  <nav class="p-4 space-y-2 font-semibold text-sm">
+    <button data-page="dashboard" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">📊 Dashboard</button>
+    <button data-page="tasks" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">📋 Tugas</button>
+    <button data-page="finance" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">💳 Keuangan</button>
+    <button data-page="plan" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">📚 Planner</button>
+    <button data-page="focus" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">⏱️ Fokus</button>
+    <button data-page="habit" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">🧠 Habit Tracker</button>
+    <button data-page="ipcalc" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">📊 IP Calculator</button>
+    <button data-page="achievements" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">🏅 Achievements</button>
+    <button data-page="leaderboard" class="tab w-full text-left px-3 py-2 rounded hover:bg-indigo-100">🏆 Leaderboard</button>
+  </nav>
+</aside>
+
+<main id="app" class="pt-24 px-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+  <section id="page-dashboard" class="page col-span-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div data-link="tasks" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">📋 Manajemen Tugas</h3>
+      <p class="text-gray-600 text-sm">Atur tugas kuliah, deadline & progress harian.</p>
+    </div>
+
+    <div data-link="finance" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">💳 Keuangan Mahasiswa</h3>
+      <p class="text-gray-600 text-sm">Kelola keuangan harian.</p>
+    </div>
+
+    <div data-link="plan" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">📚 Planner Kuliah</h3>
+      <p class="text-gray-600 text-sm">Track mata kuliah & progress akademik.</p>
+    </div>
+
+    <div data-link="focus" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">⏱️ Pomodoro Fokus 25/5</h3>
+      <p class="text-gray-600 text-sm">Mode fokus belajar efektif.</p>
+    </div>
+
+    <div data-link="habit" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">🧠 Habit Tracker</h3>
+      <p class="text-gray-600 text-sm">Atur Kebiasaan untuk meningkatkan produktivitas di setiap harimu.</p>
+    </div>
+
+    <div data-link="ipcalc" class="card p-6 rounded-2xl cursor-pointer">
+      <h3 class="font-semibold text-xl mb-1">📊 Manajemen IP</h3>
+      <p class="text-gray-600 text-sm">Atur dan pantau IP setiap semester.</p>
+    </div>
+  </section>
+
+  <section id="page-tasks" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-2xl font-bold text-indigo-700">Daftar Tugas</h2>
+      <button id="btn-show-add-task" class="px-4 py-2 bg-indigo-600 text-white rounded-xl">＋ Tambah</button>
+    </div>
+    <div id="tasks-list" class="space-y-2"></div>
+    <div id="no-tasks" class="text-gray-400 p-4">Belum ada tugas</div>
+  </section>
+
+  <section id="page-finance" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">Keuangan Mahasiswa</h2>
+    
+    <div class="flex gap-2 mb-3">
+      <input id="input-income" placeholder="Tambah Pemasukan" class="flex-1 p-3 border rounded-xl" />
+      <button id="btn-add-income" class="bg-green-500 text-white p-3 rounded-xl">Tambah</button>
+    </div>
+
+    <div class="flex gap-2 mb-3">
+      <input id="input-expense" placeholder="Jumlah Pengeluaran" class="flex-1 p-3 border rounded-xl" />
+      <input id="input-expense-note" placeholder="Keperluan / Catatan" class="flex-1 p-3 border rounded-xl" />
+      <button id="btn-add-expense" class="bg-red-500 text-white p-3 rounded-xl">Tambah</button>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 mb-3 text-center">
+      <div class="p-3 bg-green-100 rounded-xl">Kredit: <span id="total-income">0</span></div>
+      <div class="p-3 bg-red-100 rounded-xl">Debit: <span id="total-expense">0</span></div>
+      <div class="p-3 bg-blue-100 rounded-xl">Saldo: <span id="balance">0</span></div>
+    </div>
+    
+    <div class="mb-3 flex justify-between items-center">
+        <h3 class="font-semibold text-gray-700">Riwayat Transaksi</h3>
+        <select id="finance-filter" class="p-2 border rounded-xl">
+            <option value="all">Semua Transaksi</option>
+            <option value="income">Pemasukan Saja</option>
+            <option value="expense">Pengeluaran Saja</option>
+        </select>
+    </div>
+    <div id="finance-list" class="max-h-64 overflow-y-auto border rounded-xl p-2 bg-gray-50"></div>
+  </section>
+
+  <section id="page-focus" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl flex flex-col items-center hidden">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">Pomodoro Timer 25/5</h2>
+    <div id="timer-display" class="text-5xl font-mono mb-4">25:00</div>
+    <div class="flex gap-4">
+      <button id="btn-start" class="px-6 py-2 bg-indigo-600 text-white rounded-xl">Start</button>
+      <button id="btn-reset" class="px-6 py-2 bg-red-500 text-white rounded-xl">Reset</button>
+    </div>
+  </section>
+
+  <section id="page-plan" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">Roadmap Perkuliahan</h2>
+
+    <div class="flex gap-2 mb-4">
+      <input id="form-semester" placeholder="Semester" class="p-3 border rounded-xl flex-1" />
+      <input id="form-sks" placeholder="SKS" class="p-3 border rounded-xl w-28" />
+      <input id="form-target" placeholder="Target" class="p-3 border rounded-xl flex-1" />
+      <input id="form-status" placeholder="Status" class="p-3 border rounded-xl w-48" />
+      <button id="btn-add-roadmap" class="bg-indigo-600 text-white p-3 rounded-xl">Tambah</button>
+    </div>
+
+    <div id="roadmap-list" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+  </section>
+  
+  <section id="page-habit"
+    class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    
+    <div class="flex">
+      <aside class="w-48 pr-4 border-r border-gray-100 hidden md:block">
+          <h3 class="font-bold text-lg mb-4 text-indigo-700">Filter</h3>
+
+          <div class="mb-6">
+              <h4 class="text-xs font-semibold uppercase text-gray-500 mb-1">Time of Day</h4>
+              <nav class="space-y-1 text-sm">
+                  <button data-time="all" class="habit-filter-time w-full text-left px-3 py-1 rounded hover:bg-gray-100">⭐ Semua</button>
+                  <button data-time="morning" class="habit-filter-time w-full text-left px-3 py-1 rounded hover:bg-gray-100">🌞 Pagi</button>
+                  <button data-time="afternoon" class="habit-filter-time w-full text-left px-3 py-1 rounded hover:bg-gray-100">☀️ Siang</button>
+                  <button data-time="evening" class="habit-filter-time w-full text-left px-3 py-1 rounded hover:bg-gray-100">🌙 Malam</button>
+              </nav>
+          </div>
+
+          <div class="mb-6">
+              <h4 class="text-xs font-semibold uppercase text-gray-500 mb-1">Areas</h4>
+              <nav class="space-y-1 text-sm">
+                  <button data-area="all" class="habit-filter-area w-full text-left px-3 py-1 rounded hover:bg-gray-100">Semua Area</button>
+                  <button data-area="study" class="habit-filter-area w-full text-left px-3 py-1 rounded hover:bg-gray-100">📚 Belajar</button>
+                  <button data-area="health" class="habit-filter-area w-full text-left px-3 py-1 rounded hover:bg-gray-100">🏋️ Kesehatan</button>
+                  <button data-area="finance" class="habit-filter-area w-full text-left px-3 py-1 rounded hover:bg-gray-100">💳 Keuangan</button>
+              </nav>
+          </div>
+      </aside>
+
+      <div class="flex-1 pl-4">
+          <div class="flex justify-between items-center mb-4">
+              <h2 id="habit-title-display" class="text-2xl font-bold text-indigo-700">Semua Habit Hari Ini</h2>
+              <button id="btn-show-add-habit" class="px-4 py-2 bg-indigo-600 text-white rounded-xl">＋ Tambah Habit</button>
+          </div>
+
+          <h3 class="font-semibold text-gray-700 mb-2 mt-4">Rekomendasi Habit</h3>
+          <div id="habit-recommendations" class="grid grid-cols-2 gap-3 mb-6"></div>
+          
+          <h3 class="font-semibold text-gray-700 mb-2">Habit Saya</h3>
+          <div id="habit-list" class="space-y-3"></div>
+
+          <div id="no-habits" class="text-gray-400 p-4 text-center hidden">
+              Belum ada habit yang dibuat. Klik 'Tambah Habit' atau pilih dari Rekomendasi.
+          </div>
+      </div>
+    </div>
+    
+  </section>
+  <section id="page-ipcalc"
+  class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+
+  <h2 class="text-2xl font-bold text-indigo-700 mb-4">📊 Kalkulator Nilai Mata Kuliah</h2>
+
+  <div class="mb-4 p-4 border rounded-xl bg-indigo-50">
+      <h3 class="font-semibold mb-2 text-indigo-700">Detail Mata Kuliah</h3>
+      
+      <input id="course-semester" type="number" value="1" min="1" placeholder="Nomor Semester"
+        class="w-full p-3 border rounded-xl mb-3" required />
+        
+      <div class="grid grid-cols-2 gap-3">
+          <input id="course-name" placeholder="Nama Mata Kuliah"
+            class="p-3 border rounded-xl" required />
+          <input id="course-sks" type="number" value="3" min="1" placeholder="Jumlah SKS"
+            class="p-3 border rounded-xl" required />
+      </div>
+  </div>
+
+  <div class="mb-4 p-4 border rounded-xl">
+      <div class="flex justify-between items-center mb-3">
+          <h3 class="font-semibold text-gray-700">Aspek Penilaian (Bobot Wajib 100%)</h3>
+          <button id="btn-add-assessment" class="px-3 py-1 bg-indigo-600 text-white rounded-xl text-sm hover:bg-indigo-700">
+              + Aspek
+          </button>
+      </div>
+      
+      <div id="assessment-form-container" class="space-y-1">
+          </div>
+  </div>
+
+
+  <button id="btn-calc-ip" class="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-bold mb-4 hover:bg-green-700">
+    Hitung Nilai Akhir & IP
+  </button>
+
+  <h3 class="font-bold text-lg mt-2 mb-2 text-indigo-700 border-b pb-1">Hasil Mata Kuliah Ini</h3>
+  <div class="grid grid-cols-4 gap-3 text-center mb-6">
+    <div class="p-3 bg-gray-100 rounded-xl">Nilai Akhir: <span id="ip-result-score" class="font-bold text-lg">--</span>%</div>
+    <div class="p-3 bg-gray-100 rounded-xl">Huruf: <span id="ip-result-grade" class="font-bold text-lg">--</span></div>
+    <div class="p-3 bg-gray-100 rounded-xl">IP: <span id="ip-result" class="font-bold text-lg">--</span></div>
+    <div class="p-3 bg-gray-100 rounded-xl">Predikat: <span id="ip-category" class="font-bold text-lg">--</span></div>
+  </div>
+  
+  <div id="ip-summary-box">
+      </div>
+
+  <h3 class="font-bold text-lg mt-6 mb-3 text-indigo-700">Riwayat Perhitungan Mata Kuliah</h3>
+  <div id="ip-history-list" class="space-y-3 max-h-80 overflow-y-auto border p-3 rounded-xl bg-gray-50">
+    <p class="text-gray-500 p-2 text-center">Memuat riwayat...</p>
+  </div>
+  
+</section>
+
+  <section id="page-achievements" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">Achievements</h2>
+
+    <div class="mb-4 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+      <h3 class="font-semibold text-lg text-indigo-800">Total Reward Points</h3>
+      <p id="reward-points" class="text-3xl font-bold text-green-600">0</p>
+    </div>
+
+    <div id="achievement-list" class="space-y-3"></div>
+  </section>
+  
+  <section id="page-leaderboard" class="page col-span-3 p-6 bg-white rounded-2xl shadow-xl hidden">
+    <h2 class="text-2xl font-bold mb-4 text-indigo-700">🏆 Leaderboard Poin</h2>
+
+    <div class="mb-4 p-4 bg-indigo-50 rounded-xl border border-indigo-200">
+      <p class="text-gray-600">Peringkat ini didasarkan pada Total Reward Points yang diperoleh dari menyelesaikan tugas dan Pomodoro.</p>
+    </div>
+
+    <div id="leaderboard-list" class="space-y-3">
+      </div>
+  </section>
+
+</main>
+
+<div id="modal-add-task" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden">
+  <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md modal-content-wrapper">
+    <input id="task-title" placeholder="Judul Tugas" class="w-full p-3 border rounded-xl mb-3" />
+    <input id="task-date" type="date" class="w-full p-3 border rounded-xl mb-3" />
+    <input id="task-time" type="time" class="w-full p-3 border rounded-xl mb-3" />
+    <div class="flex gap-2">
+      <button id="btn-save-task" class="w-full bg-indigo-600 text-white p-3 rounded-xl">Simpan</button>
+      <button id="btn-cancel-task" class="w-full bg-gray-200 p-3 rounded-xl">Batal</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal-add-habit" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden">
+    <div class="bg-white p-6 rounded-2xl shadow-xl w-full max-w-md">
+        <h3 class="text-xl font-bold mb-4 text-indigo-700">Tambah Habit Baru</h3>
+
+        <input id="habit-title" placeholder="Nama Habit (Misal: Belajar Python)"
+          class="w-full p-3 border rounded-xl mb-3" />
+
+        <div class="flex items-center gap-2 mb-3 border p-3 rounded-xl">
+            <label class="text-gray-600 w-24">Goal:</label>
+            <input id="habit-goal-unit" type="number" value="1" min="1" class="w-16 p-1 border rounded text-center"/>
+            <span class="text-gray-700">times per</span>
+            <select id="habit-goal-frequency" class="p-1 border rounded flex-1">
+                <option value="day">Day</option>
+                <option value="week">Week</option>
+            </select>
+        </div>
+
+        <div class="mb-3 border p-3 rounded-xl">
+            <label class="block text-gray-600 mb-2">Time of Day (Pilih satu sebagai Waktu Utama)</label>
+            <div class="flex gap-4">
+                <label><input type="checkbox" name="habit_time" value="morning" checked> 🌞 Pagi</label>
+                <label><input type="checkbox" name="habit_time" value="afternoon"> ☀️ Siang</label>
+                <label><input type="checkbox" name="habit_time" value="evening"> 🌙 Malam</label>
+            </div>
+            <p class="text-xs text-red-500 mt-2" id="time-error" hidden>Pilih minimal satu waktu.</p>
+        </div>
+
+        <select id="habit-area" class="w-full p-3 border rounded-xl mb-3">
+            <option value="general">⭐ General</option>
+            <option value="study">📚 Belajar</option>
+            <option value="health">🏋️ Kesehatan</option>
+            <option value="finance">💳 Keuangan</option>
+        </select>
+        
+        <input id="habit-icon" placeholder="Emoji (opsional, Misal: 🐍)"
+          class="w-full p-3 border rounded-xl mb-4" />
+
+        <div class="flex gap-2">
+            <button id="btn-save-habit"
+              class="w-full bg-indigo-600 text-white p-3 rounded-xl">
+              Simpan
+            </button>
+            <button id="btn-cancel-habit"
+              class="w-full bg-gray-200 p-3 rounded-xl">
+              Batal
+            </button>
+        </div>
+    </div>
+</div>
+<div id="modal-profile" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden">
+    <div class="bg-white p-8 rounded-2xl shadow-xl w-full max-w-lg modal-content-wrapper">
+        <h2 class="text-3xl font-bold text-indigo-800 mb-6 border-b pb-2">Profil Pengguna</h2>
+
+        <div id="profile-details" class="space-y-4">
+            <div class="flex items-center gap-4">
+                <span class="text-4xl">👤</span>
+                <div>
+                    <h3 id="profile-username" class="text-xl font-bold">Memuat...</h3>
+                    <p id="profile-email" class="text-sm text-gray-500"></p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 pt-3 border-t">
+                <div class="p-3 bg-indigo-50 rounded-xl">
+                    <p class="text-xs text-indigo-700 font-semibold">Total Poin</p>
+                    <p id="stat-points" class="text-2xl font-bold text-green-600">0</p>
+                </div>
+                <div class="p-3 bg-indigo-50 rounded-xl">
+                    <p class="text-xs text-indigo-700 font-semibold">Tugas Selesai</p>
+                    <p id="stat-tasks" class="text-2xl font-bold text-indigo-600">0</p>
+                </div>
+                <div class="p-3 bg-indigo-50 rounded-xl">
+                    <p class="text-xs text-indigo-700 font-semibold">Sesi Pomodoro</p>
+                    <p id="stat-pomodoro" class="text-2xl font-bold text-indigo-600">0</p>
+                </div>
+                <div class="p-3 bg-indigo-50 rounded-xl">
+                    <p class="text-xs text-indigo-700 font-semibold">Roadmap Selesai</p>
+                    <p id="stat-roadmap" class="text-2xl font-bold text-indigo-600">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 flex justify-between">
+            <button id="btn-close-profile" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-xl">Tutup</button>
+            <button id="btn-profile-logout" class="px-4 py-2 bg-red-600 text-white rounded-xl">Logout</button>
+        </div>
+    </div>
+</div>
+
+<footer class="mt-auto w-full text-center py-6 text-sm text-indigo-900">
+    <div class="border-t border-indigo-300 pt-4">
+        <p class="font-semibold text-indigo-900">Student Productivity</p>
+        <p class="text-xs text-indigo-700">
+            © 2025 All rights reserved 
+            <a href="nouvalarrizqyy.netlify.app" 
+               target="_blank" 
+               class="text-indigo-600 font-semibold hover:underline">
+               Muhammad Nouval Ar-Rizqy
+            </a>.
+        </p>
+    </div>
+</footer>
+
+
+<div id="transition-purple"></div>
+<div id="transition-yellow"></div>
+
+<script src="app.js"></script>
+<script>
+/* Sidebar toggle */
+document.getElementById('btn-menu').onclick = () => {
+  document.getElementById('sidebar').classList.toggle('-translate-x-full');
+};
+
+/* Sidebar navigation */
+document.querySelectorAll('#sidebar button').forEach(btn => {
+  btn.onclick = () => {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+
+    document.querySelectorAll('.page').forEach(p => {
+      p.classList.add('hidden');
+      p.classList.remove('show-page');
+    });
+
+    const page = document.getElementById('page-' + btn.dataset.page);
+    if (page) {
+      page.classList.remove('hidden');
+      setTimeout(() => page.classList.add('show-page'), 50);
+    }
+  };
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <title>Login - Student Productivity</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-blue-100 to-indigo-200">
+  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow">
+    <h1 class="text-2xl font-bold mb-4">Masuk</h1>
+    <div id="msg" class="text-sm text-red-500 mb-2 hidden"></div>
+    <input id="login-username" placeholder="Username or Email" class="w-full p-3 border rounded mb-2"/>
+    <input id="login-password" type="password" placeholder="Password" class="w-full p-3 border rounded mb-4"/>
+    
+    <p id="btn-forgot-password" class="text-sm text-indigo-600 mb-4 cursor-pointer hover:text-indigo-800 text-right">
+        Lupa Password?
+    </p>
+
+    <div class="flex gap-2">
+      <button id="btn-login" class="flex-1 bg-indigo-600 text-white p-3 rounded">Login</button>
+      <a href="register.html" class="flex-1 text-center p-3 rounded border">Register</a>
+    </div>
+  </div>
+
+  <div id="modal-forgot-password" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden">
+      <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-4">Reset Password</h3>
+          <p class="text-sm text-gray-600 mb-4">
+              Masukkan email yang terdaftar. Kami akan menggunakan ini untuk memverifikasi Anda.
+          </p>
+          <div id="forgot-msg" class="text-red-500 mb-3 hidden"></div>
+          
+          <input id="forgot-email" type="email" placeholder="Email Anda" class="w-full p-3 border rounded mb-4"/>
+          
+          <div class="flex gap-2">
+              <button id="btn-submit-forgot" class="flex-1 bg-indigo-600 text-white p-3 rounded-xl">Lanjutkan</button>
+              <button id="btn-cancel-forgot" class="flex-1 bg-gray-200 p-3 rounded-xl">Batal</button>
+          </div>
+      </div>
+  </div>
+
+  <div id="modal-new-password" class="fixed inset-0 bg-black/40 flex items-center justify-center p-4 hidden">
+      <div class="bg-white p-6 rounded-xl shadow-xl w-full max-w-md">
+          <h3 class="text-2xl font-bold mb-4">Atur Password Baru</h3>
+          <p id="reset-info" class="text-sm text-gray-600 mb-4">Verifikasi berhasil. Silakan masukkan password baru Anda.</p>
+          <div id="new-pass-msg" class="text-red-500 mb-3 hidden"></div>
+          
+          <input id="new-password" type="password" placeholder="Password Baru" class="w-full p-3 border rounded mb-2"/>
+          <input id="confirm-password" type="password" placeholder="Konfirmasi Password Baru" class="w-full p-3 border rounded mb-4"/>
+
+          <div class="flex gap-2">
+              <button id="btn-submit-new-password" class="flex-1 bg-red-600 text-white p-3 rounded-xl">Simpan & Login</button>
+              <button id="btn-cancel-new-password" class="flex-1 bg-gray-200 p-3 rounded-xl">Batal</button>
+          </div>
+      </div>
+  </div>
+
+
+  <script>
+    const API = 'http://localhost:4001/api'; 
+    const TOKEN_KEY = 'sp_token';
+
+    // Global variable untuk menyimpan user ID sementara setelah verifikasi
+    let resetUserId = null; 
+
+    // --- LOGIKA LOGIN ---
+    document.getElementById('btn-login').addEventListener('click', async ()=>{
+      const user = document.getElementById('login-username').value.trim();
+      const pass = document.getElementById('login-password').value.trim();
+      if(!user || !pass) {
+          document.getElementById('msg').textContent = 'Lengkapi semua field'; 
+          document.getElementById('msg').classList.remove('hidden');
+          return;
+      }
+      try{
+        const res = await fetch(API+'/auth/login', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+        if(!res.ok) { 
+            document.getElementById('msg').textContent = data.message || 'Login gagal'; 
+            document.getElementById('msg').classList.remove('hidden'); 
+            return; 
+        }
+        // save token + user
+        localStorage.setItem(TOKEN_KEY, data.token);
+        localStorage.setItem('sp_user', JSON.stringify(data.user));
+        location.href = '/';
+      }catch(err){
+        console.error(err);
+        document.getElementById('msg').textContent = 'Error connecting to API'; 
+        document.getElementById('msg').classList.remove('hidden');
+      }
+    });
+
+    // --- UTILITIES MODAL LUPA PASSWORD ---
+    
+    // Buka Modal Permintaan Reset
+    document.getElementById('btn-forgot-password').addEventListener('click', () => {
+        document.getElementById('modal-forgot-password').classList.remove('hidden');
+        document.getElementById('forgot-msg').classList.add('hidden');
+        document.getElementById('forgot-email').value = '';
+    });
+
+    // Tutup Modal Permintaan Reset
+    document.getElementById('btn-cancel-forgot').addEventListener('click', () => {
+        document.getElementById('modal-forgot-password').classList.add('hidden');
+    });
+
+    // Tutup Modal Atur Password Baru
+    document.getElementById('btn-cancel-new-password').addEventListener('click', () => {
+        document.getElementById('modal-new-password').classList.add('hidden');
+    });
+
+
+    // --- Langkah 1: Submit Permintaan Email (Memanggil API check-email) ---
+    document.getElementById('btn-submit-forgot').addEventListener('click', async () => {
+        const email = document.getElementById('forgot-email').value.trim();
+        const forgotMsg = document.getElementById('forgot-msg');
+
+        if (!email) {
+            forgotMsg.textContent = 'Email wajib diisi.';
+            forgotMsg.className = 'text-sm mb-3 text-red-500';
+            forgotMsg.classList.remove('hidden');
+            return;
+        }
+
+        forgotMsg.textContent = 'Memproses verifikasi...';
+        forgotMsg.className = 'text-sm mb-3 text-indigo-600';
+        forgotMsg.classList.remove('hidden');
+        
+        try {
+            // ⭐ Panggil API BARU: /api/forgot/check-email
+            const res = await fetch(API + '/forgot/check-email', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ email: email })
+            });
+            
+            const data = await res.json();
+
+            if (res.ok) {
+                // ⭐ BERHASIL: Simpan ID dari backend dan pindah ke modal New Password
+                resetUserId = data.userId; 
+
+                document.getElementById('modal-forgot-password').classList.add('hidden');
+                document.getElementById('modal-new-password').classList.remove('hidden');
+                
+                // Reset modal new password
+                document.getElementById('new-password').value = '';
+                document.getElementById('confirm-password').value = '';
+                document.getElementById('new-pass-msg').classList.add('hidden');
+                document.getElementById('reset-info').textContent = `Email ${email} telah diverifikasi. Atur password baru.`;
+                
+            } else {
+                // Gagal (Email tidak ditemukan)
+                forgotMsg.textContent = data.message || 'Email tidak ditemukan dalam sistem.';
+                forgotMsg.className = 'text-sm mb-3 text-red-500';
+            }
+
+        } catch (err) {
+            forgotMsg.textContent = 'Terjadi kesalahan koneksi saat verifikasi.';
+            forgotMsg.className = 'text-sm mb-3 text-red-500';
+            console.error(err);
+        }
+    });
+
+
+    // --- Langkah 2: Submit Password Baru (Memanggil API submit) ---
+    document.getElementById('btn-submit-new-password').addEventListener('click', async () => {
+        const newPass = document.getElementById('new-password').value.trim();
+        const confirmPass = document.getElementById('confirm-password').value.trim();
+        const newPassMsg = document.getElementById('new-pass-msg');
+
+        if (newPass.length < 6) {
+            newPassMsg.textContent = 'Password harus minimal 6 karakter.';
+            newPassMsg.className = 'text-sm mb-3 text-red-500';
+            newPassMsg.classList.remove('hidden');
+            return;
+        }
+        if (newPass !== confirmPass) {
+            newPassMsg.textContent = 'Konfirmasi password tidak cocok.';
+            newPassMsg.className = 'text-sm mb-3 text-red-500';
+            newPassMsg.classList.remove('hidden');
+            return;
+        }
+        if (!resetUserId) {
+            newPassMsg.textContent = 'Error: Sesi verifikasi hilang. Coba lagi dari awal.';
+            newPassMsg.className = 'text-sm mb-3 text-red-500';
+            newPassMsg.classList.remove('hidden');
+            return;
+        }
+
+        newPassMsg.textContent = 'Menyimpan password baru...';
+        newPassMsg.className = 'text-sm mb-3 text-indigo-600';
+        newPassMsg.classList.remove('hidden');
+
+        try {
+             // ⭐ Panggil API: /api/forgot/submit 
+             const res = await fetch(API + '/forgot/submit', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ userId: resetUserId, new_password: newPass })
+             });
+             
+             const data = await res.json();
+
+             if(res.ok){
+                 newPassMsg.textContent = data.message || 'Password berhasil direset! Silakan login.';
+                 newPassMsg.className = 'text-sm mb-3 text-green-600';
+                 
+                 // Paksa tutup modal dan arahkan ke login
+                 setTimeout(() => {
+                     document.getElementById('modal-new-password').classList.add('hidden');
+                     location.href = '/login.html'; 
+                 }, 1500);
+             } else {
+                 newPassMsg.textContent = data.message || 'Gagal menyimpan password di server.';
+                 newPassMsg.className = 'text-sm mb-3 text-red-500';
+             }
+
+        } catch (err) {
+            newPassMsg.textContent = 'Error koneksi saat menyimpan password.';
+            newPassMsg.className = 'text-sm mb-3 text-red-500';
+            console.error(err);
+        }
+    });
+
+  </script>
+</body>
+</html>
